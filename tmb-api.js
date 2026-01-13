@@ -1,11 +1,26 @@
 // Funzioni per interagire con l'API TMB i-bus
 
+// Verifica che TMB_CONFIG sia definito
+if (typeof TMB_CONFIG === 'undefined') {
+    console.error('TMB_CONFIG non definito! Assicurati di aver caricato config.js o config.example.js');
+    // Crea un oggetto di default per evitare errori
+    window.TMB_CONFIG = {
+        APP_ID: 'YOUR_APP_ID',
+        APP_KEY: 'YOUR_APP_KEY',
+        API_BASE_URL: 'https://api.tmb.cat/v1'
+    };
+}
+
 /**
  * Ottiene i tempi di arrivo per una fermata specifica
  * @param {string} stopCode - Codice della fermata (es: "3258")
  * @returns {Promise<Object>} Dati degli arrivi
  */
 async function getStopArrivals(stopCode) {
+    if (!TMB_CONFIG || TMB_CONFIG.APP_ID === 'YOUR_APP_ID') {
+        throw new Error('Credenziali API TMB non configurate. Copia config.example.js come config.js e inserisci le tue credenziali.');
+    }
+    
     const url = `${TMB_CONFIG.API_BASE_URL}/ibus/stops/${stopCode}`;
     const params = new URLSearchParams({
         app_id: TMB_CONFIG.APP_ID,
@@ -37,6 +52,10 @@ async function getStopArrivals(stopCode) {
  * @returns {Promise<Object>} Lista di fermate vicine
  */
 async function findNearbyStops(lat, lon, radius = 500) {
+    if (!TMB_CONFIG || TMB_CONFIG.APP_ID === 'YOUR_APP_ID') {
+        throw new Error('Credenziali API TMB non configurate. Copia config.example.js come config.js e inserisci le tue credenziali.');
+    }
+    
     // Nota: Questo endpoint potrebbe variare - controlla la documentazione TMB
     // Per ora usiamo un approccio alternativo: ottenere tutte le fermate e filtrare
     // In produzione, dovresti usare un endpoint specifico se disponibile

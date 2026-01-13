@@ -271,7 +271,9 @@ function hideError() {
 
 // Verifica configurazione all'avvio
 window.addEventListener('DOMContentLoaded', () => {
-    if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
+    if (typeof TMB_CONFIG === 'undefined') {
+        showError('⚠️ File config.js non trovato. Copia config.example.js come config.js e inserisci le tue credenziali API TMB.');
+    } else if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
         showError('⚠️ Configura le credenziali API TMB in config.js per utilizzare l\'applicazione');
     }
 });
