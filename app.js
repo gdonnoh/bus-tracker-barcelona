@@ -50,17 +50,20 @@ async function findNearestStop() {
                 
                 showStatus('Ricerca fermate vicine...', 'info');
                 
-                // Prova a cercare fermate vicine
-                // Se l'API non supporta questo, usa un approccio alternativo
-                const nearbyData = await findNearbyStops(latitude, longitude, 1000);
+                // Cerca fermate vicine (raggio aumentato a 2000m per Barcellona)
+                const nearbyData = await findNearbyStops(latitude, longitude, 2000);
+                
+                console.log('Risultati ricerca fermate:', nearbyData);
                 
                 if (nearbyData.data && nearbyData.data.stops && nearbyData.data.stops.length > 0) {
                     const nearestStop = nearbyData.data.stops[0];
+                    console.log('Fermata più vicina trovata:', nearestStop);
                     displayStopInfo(nearestStop);
                     await loadArrivals(nearestStop.stopId || nearestStop.code);
                 } else {
-                    // Fallback: mostra un messaggio e permette ricerca manuale
-                    showStatus('Nessuna fermata trovata nelle vicinanze. Usa la ricerca manuale.', 'info');
+                    // Nessuna fermata trovata
+                    showStatus(`Nessuna fermata trovata entro 2km. Posizione: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. Usa la ricerca manuale con un codice fermata.`, 'info');
+                    console.warn('Nessuna fermata trovata. Coordinate:', latitude, longitude);
                 }
             } catch (error) {
                 console.error('Errore nella ricerca:', error);
