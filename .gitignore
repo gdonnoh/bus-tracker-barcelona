@@ -1,0 +1,19 @@
+# Credenziali API (non committare mai!)
+config.js
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Node modules (se aggiungi dipendenze in futuro)
+node_modules/

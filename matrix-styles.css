@@ -1,0 +1,316 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 20px;
+}
+
+.simulator-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    color: #00ff00;
+    margin-bottom: 10px;
+    font-size: 2em;
+}
+
+.subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 30px;
+}
+
+/* Container per il display matrice */
+.matrix-display-container {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+    padding: 20px;
+    background: #000;
+    border-radius: 10px;
+    border: 3px solid #00ff00;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+}
+
+/* Canvas del display matrice */
+#matrixCanvas {
+    border: 2px solid #00ff00;
+    background: #000;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    box-shadow: 
+        0 0 20px rgba(0, 255, 0, 0.5),
+        inset 0 0 30px rgba(0, 255, 0, 0.1);
+    /* Simula griglia pixel LED */
+    background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(0, 255, 0, 0.05) 9px, rgba(0, 255, 0, 0.05) 10px),
+        repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(0, 255, 0, 0.05) 9px, rgba(0, 255, 0, 0.05) 10px);
+}
+
+/* Display matrice LED simulato */
+.matrix-display {
+    width: 1280px;  /* 128 pixel * 10px = 1280px (scala 10:1) */
+    height: 320px;  /* 32 pixel * 10px = 320px */
+    background: #000;
+    border: 3px solid #00ff00;
+    position: relative;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-shadow: 
+        0 0 20px rgba(0, 255, 0, 0.5),
+        inset 0 0 30px rgba(0, 255, 0, 0.1);
+    /* Simula l'effetto LED con pattern */
+    background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(0, 255, 0, 0.03) 9px, rgba(0, 255, 0, 0.03) 10px),
+        repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(0, 255, 0, 0.03) 9px, rgba(0, 255, 0, 0.03) 10px);
+}
+
+/* Linea di separazione tra i due display */
+.matrix-display::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(0, 255, 0, 0.3);
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+/* Stile per il testo sul display matrice */
+.matrix-text {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00;
+    line-height: 1.2;
+}
+
+.matrix-header {
+    font-size: 22px;
+    color: #00ffff;
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 0 0 8px #00ffff;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.matrix-stop-info {
+    font-size: 16px;
+    color: #ffff00;
+    margin-bottom: 12px;
+    text-align: center;
+    text-shadow: 0 0 5px #ffff00;
+    letter-spacing: 1px;
+}
+
+.matrix-arrivals {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: flex-start;
+    padding-top: 5px;
+}
+
+.matrix-arrival-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: rgba(0, 255, 0, 0.08);
+    border-left: 3px solid #00ff00;
+    border-radius: 2px;
+}
+
+.matrix-line {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff00ff;
+    min-width: 70px;
+    text-shadow: 0 0 8px #ff00ff;
+    letter-spacing: 1px;
+}
+
+.matrix-destination {
+    flex: 1;
+    font-size: 14px;
+    color: #ffffff;
+    margin-left: 12px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+.matrix-time {
+    font-size: 20px;
+    font-weight: bold;
+    color: #00ff00;
+    min-width: 90px;
+    text-align: right;
+    text-shadow: 0 0 5px #00ff00;
+    letter-spacing: 1px;
+}
+
+.matrix-time.soon {
+    color: #ffaa00;
+    text-shadow: 0 0 8px #ffaa00;
+}
+
+.matrix-time.now {
+    color: #ff0000;
+    text-shadow: 0 0 10px #ff0000;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.matrix-no-arrivals {
+    text-align: center;
+    font-size: 18px;
+    color: #888;
+    padding: 20px;
+}
+
+.matrix-loading {
+    text-align: center;
+    font-size: 18px;
+    color: #00ffff;
+    padding: 20px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Controlli */
+.controls {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.controls h2 {
+    color: #00ff00;
+    margin-bottom: 15px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.control-group label {
+    color: #fff;
+    font-weight: bold;
+}
+
+.control-group input {
+    padding: 8px 12px;
+    border: 2px solid #00ff00;
+    background: #000;
+    color: #00ff00;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+.control-group button {
+    padding: 8px 16px;
+    background: #00ff00;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s;
+}
+
+.control-group button:hover {
+    background: #00cc00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.control-group button:active {
+    transform: scale(0.95);
+}
+
+/* Info */
+.info {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.info h3 {
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.info ul {
+    list-style: none;
+    color: #ccc;
+}
+
+.info li {
+    margin: 8px 0;
+    padding-left: 20px;
+    position: relative;
+}
+
+.info li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #00ff00;
+}
+
+/* Responsive per visualizzazione più piccola */
+@media (max-width: 1400px) {
+    .matrix-display {
+        transform: scale(0.8);
+        transform-origin: center;
+    }
+}
+
+@media (max-width: 1200px) {
+    .matrix-display {
+        transform: scale(0.6);
+        transform-origin: center;
+    }
+}
+
+@media (max-width: 900px) {
+    .matrix-display {
+        transform: scale(0.4);
+        transform-origin: center;
+    }
+}

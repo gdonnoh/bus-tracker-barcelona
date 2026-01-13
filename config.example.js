@@ -1,0 +1,13 @@
+// File di esempio per la configurazione API TMB
+// Copia questo file come config.js e inserisci le tue credenziali reali
+
+const TMB_CONFIG = {
+    APP_ID: 'YOUR_APP_ID',  // Sostituisci con il tuo APP_ID da developer.tmb.cat
+    APP_KEY: 'YOUR_APP_KEY', // Sostituisci con il tuo APP_KEY da developer.tmb.cat
+    API_BASE_URL: 'https://api.tmb.cat/v1'
+};
+
+// Verifica che le credenziali siano state configurate
+if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
+    console.warn('⚠️ ATTENZIONE: Configura le credenziali API TMB in config.js');
+}

@@ -1,0 +1,277 @@
+// Logica principale dell'applicazione
+
+let currentStopCode = null;
+
+// Elementi DOM
+const findNearestBtn = document.getElementById('findNearestBtn');
+const searchByCodeBtn = document.getElementById('searchByCodeBtn');
+const stopCodeInput = document.getElementById('stopCodeInput');
+const locationStatus = document.getElementById('locationStatus');
+const stopInfo = document.getElementById('stopInfo');
+const arrivalsSection = document.getElementById('arrivalsSection');
+const arrivalsList = document.getElementById('arrivalsList');
+const loadingArrivals = document.getElementById('loadingArrivals');
+const errorMessage = document.getElementById('errorMessage');
+
+// Event listeners
+findNearestBtn.addEventListener('click', findNearestStop);
+searchByCodeBtn.addEventListener('click', searchByStopCode);
+stopCodeInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        searchByStopCode();
+    }
+});
+
+/**
+ * Trova la fermata più vicina usando la geolocalizzazione
+ */
+async function findNearestStop() {
+    findNearestBtn.disabled = true;
+    showStatus('Richiesta posizione...', 'info');
+
+    if (!navigator.geolocation) {
+        showError('La geolocalizzazione non è supportata dal tuo browser');
+        findNearestBtn.disabled = false;
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+            showStatus(`Posizione trovata: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'info');
+            
+            try {
+                // Nota: L'API TMB potrebbe non avere un endpoint diretto per fermate vicine
+                // In questo caso, potresti dover usare un database locale o un'altra API
+                // Per ora, mostriamo un messaggio e permettiamo la ricerca manuale
+                
+                // Esempio: coordinate di Barcellona centro
+                // lat: 41.3851, lon: 2.1734
+                
+                showStatus('Ricerca fermate vicine...', 'info');
+                
+                // Prova a cercare fermate vicine
+                // Se l'API non supporta questo, usa un approccio alternativo
+                const nearbyData = await findNearbyStops(latitude, longitude, 1000);
+                
+                if (nearbyData.data && nearbyData.data.stops && nearbyData.data.stops.length > 0) {
+                    const nearestStop = nearbyData.data.stops[0];
+                    displayStopInfo(nearestStop);
+                    await loadArrivals(nearestStop.stopId || nearestStop.code);
+                } else {
+                    // Fallback: mostra un messaggio e permette ricerca manuale
+                    showStatus('Nessuna fermata trovata nelle vicinanze. Usa la ricerca manuale.', 'info');
+                }
+            } catch (error) {
+                console.error('Errore nella ricerca:', error);
+                showError(`Errore: ${error.message}. Prova a cercare manualmente per codice fermata.`);
+            } finally {
+                findNearestBtn.disabled = false;
+            }
+        },
+        (error) => {
+            console.error('Errore geolocalizzazione:', error);
+            let errorMsg = 'Errore nel trovare la posizione. ';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg += 'Permesso negato. Abilita la geolocalizzazione nel browser.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg += 'Posizione non disponibile.';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg += 'Timeout nella richiesta.';
+                    break;
+            }
+            showError(errorMsg);
+            findNearestBtn.disabled = false;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+/**
+ * Cerca una fermata per codice
+ */
+async function searchByStopCode() {
+    const code = stopCodeInput.value.trim();
+    
+    if (!code) {
+        showError('Inserisci un codice fermata');
+        return;
+    }
+
+    searchByCodeBtn.disabled = true;
+    hideError();
+    
+    try {
+        // Prima prova a ottenere gli arrivi direttamente
+        // Se la fermata esiste, mostriamo le informazioni
+        await loadArrivals(code);
+        
+        // Mostra informazioni base sulla fermata
+        displayStopInfo({
+            code: code,
+            name: `Fermata ${code}`,
+            distance: null
+        });
+        
+        stopCodeInput.value = '';
+    } catch (error) {
+        console.error('Errore nella ricerca:', error);
+        showError(`Fermata non trovata o errore: ${error.message}`);
+    } finally {
+        searchByCodeBtn.disabled = false;
+    }
+}
+
+/**
+ * Carica e mostra gli arrivi per una fermata
+ */
+async function loadArrivals(stopCode) {
+    currentStopCode = stopCode;
+    arrivalsSection.classList.remove('hidden');
+    arrivalsList.innerHTML = '';
+    loadingArrivals.classList.remove('hidden');
+    hideError();
+
+    try {
+        const data = await getStopArrivals(stopCode);
+        
+        loadingArrivals.classList.add('hidden');
+        
+        // Debug: log della risposta API
+        console.log('Risposta API:', data);
+        
+        // Gestisci la struttura reale dell'API TMB
+        if (data.status === 'success' && data.data && data.data.ibus && data.data.ibus.length > 0) {
+            const arrivals = data.data.ibus;
+            displayArrivals(arrivals);
+        } else if (data.data && data.data.ibus && data.data.ibus.length > 0) {
+            // Fallback per struttura alternativa
+            const arrivals = data.data.ibus;
+            displayArrivals(arrivals);
+        } else {
+            arrivalsList.innerHTML = '<div class="no-arrivals">Nessun arrivo previsto al momento</div>';
+        }
+    } catch (error) {
+        loadingArrivals.classList.add('hidden');
+        showError(`Errore nel caricamento arrivi: ${error.message}`);
+    }
+}
+
+/**
+ * Mostra gli arrivi nella UI
+ */
+function displayArrivals(arrivals) {
+    arrivalsList.innerHTML = '';
+    
+    if (!arrivals || arrivals.length === 0) {
+        arrivalsList.innerHTML = '<div class="no-arrivals">Nessun arrivo previsto al momento</div>';
+        return;
+    }
+
+    // Ordina per tempo di arrivo (usa t-in-min, fallback a t-in-s)
+    const sortedArrivals = [...arrivals]
+        .sort((a, b) => {
+            const timeA = a['t-in-min'] !== undefined ? a['t-in-min'] : (a['t-in-s'] || 999);
+            const timeB = b['t-in-min'] !== undefined ? b['t-in-min'] : (b['t-in-s'] || 999);
+            return timeA - timeB;
+        })
+        .slice(0, 10); // Mostra solo i primi 10
+
+    sortedArrivals.forEach(arrival => {
+        const item = document.createElement('div');
+        item.className = 'arrival-item';
+        
+        // Usa t-in-min se disponibile, altrimenti calcola da t-in-s
+        const minutes = arrival['t-in-min'] !== undefined 
+            ? arrival['t-in-min'] 
+            : Math.floor((arrival['t-in-s'] || 0) / 60);
+        const seconds = arrival['t-in-s'] || 0;
+        
+        // Determina la classe CSS in base al tempo
+        let timeClass = '';
+        if (minutes === 0 && seconds <= 60) {
+            timeClass = 'now';
+        } else if (minutes <= 3) {
+            timeClass = 'soon';
+        }
+        
+        // Formatta il tempo di arrivo
+        let timeText = '';
+        if (arrival['text-ca'] === 'imminent' || (minutes === 0 && seconds <= 60)) {
+            timeText = seconds > 0 ? `${seconds}s` : 'Arrivo';
+        } else {
+            timeText = formatArrivalTime(minutes);
+        }
+        
+        item.innerHTML = `
+            <div class="bus-line">${arrival.line || 'N/A'}</div>
+            <div class="bus-destination">${arrival.destination || 'Destinazione sconosciuta'}</div>
+            <div class="bus-time ${timeClass}">${timeText}</div>
+        `;
+        
+        arrivalsList.appendChild(item);
+    });
+
+    // Auto-refresh ogni 30 secondi
+    setTimeout(() => {
+        if (currentStopCode) {
+            loadArrivals(currentStopCode);
+        }
+    }, 30000);
+}
+
+/**
+ * Mostra le informazioni della fermata
+ */
+function displayStopInfo(stop) {
+    stopInfo.classList.remove('hidden');
+    document.getElementById('stopName').textContent = stop.name || `Fermata ${stop.code}`;
+    document.getElementById('stopCode').textContent = `Codice: ${stop.code || stop.stopId}`;
+    
+    if (stop.distance !== null && stop.distance !== undefined) {
+        const distanceText = stop.distance < 1000 
+            ? `${Math.round(stop.distance)} metri`
+            : `${(stop.distance / 1000).toFixed(2)} km`;
+        document.getElementById('stopDistance').textContent = `Distanza: ${distanceText}`;
+    } else {
+        document.getElementById('stopDistance').textContent = '';
+    }
+}
+
+/**
+ * Mostra un messaggio di stato
+ */
+function showStatus(message, type = 'info') {
+    locationStatus.textContent = message;
+    locationStatus.className = `status-message ${type}`;
+    locationStatus.classList.remove('hidden');
+}
+
+/**
+ * Mostra un errore
+ */
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+}
+
+/**
+ * Nasconde il messaggio di errore
+ */
+function hideError() {
+    errorMessage.classList.add('hidden');
+}
+
+// Verifica configurazione all'avvio
+window.addEventListener('DOMContentLoaded', () => {
+    if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
+        showError('⚠️ Configura le credenziali API TMB in config.js per utilizzare l\'applicazione');
+    }
+});
