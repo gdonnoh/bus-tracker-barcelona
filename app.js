@@ -269,11 +269,26 @@ function hideError() {
     errorMessage.classList.add('hidden');
 }
 
-// Verifica configurazione all'avvio
+// Verifica configurazione all'avvio (dopo che tutti gli script sono caricati)
 window.addEventListener('DOMContentLoaded', () => {
-    if (typeof TMB_CONFIG === 'undefined') {
-        showError('⚠️ File config.js non trovato. Copia config.example.js come config.js e inserisci le tue credenziali API TMB.');
-    } else if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
-        showError('⚠️ Configura le credenziali API TMB in config.js per utilizzare l\'applicazione');
-    }
+    // Aspetta un attimo per assicurarsi che tutti gli script siano caricati
+    setTimeout(() => {
+        if (typeof TMB_CONFIG === 'undefined') {
+            showError('⚠️ File config.js non trovato. Copia config.example.js come config.js e inserisci le tue credenziali API TMB.');
+        } else if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
+            // Mostra solo un warning, non un errore bloccante
+            console.warn('⚠️ Configura le credenziali API TMB in config.js o config.production.js per utilizzare l\'applicazione');
+            // Non mostrare errore se siamo su Vercel (potrebbe essere ancora in caricamento)
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                // Su produzione, aspetta un po' di più prima di mostrare l'errore
+                setTimeout(() => {
+                    if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
+                        showError('⚠️ Credenziali API TMB non configurate correttamente');
+                    }
+                }, 1000);
+            } else {
+                showError('⚠️ Configura le credenziali API TMB in config.js per utilizzare l\'applicazione');
+            }
+        }
+    }, 100);
 });

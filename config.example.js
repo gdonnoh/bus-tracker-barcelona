@@ -10,7 +10,5 @@ if (typeof TMB_CONFIG === 'undefined') {
     };
 }
 
-// Verifica che le credenziali siano state configurate
-if (TMB_CONFIG.APP_ID === 'YOUR_APP_ID' || TMB_CONFIG.APP_KEY === 'YOUR_APP_KEY') {
-    console.warn('⚠️ ATTENZIONE: Configura le credenziali API TMB in config.js o config.production.js');
-}
+// Verifica che le credenziali siano state configurate (solo dopo che tutti gli script sono caricati)
+// Questo controllo viene fatto in app.js dopo il DOMContentLoaded

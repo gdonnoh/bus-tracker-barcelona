@@ -42,22 +42,32 @@
         </div>
     </div>
 
-    <!-- Carica config.example.js come base, poi config.production.js per produzione -->
-    <!-- config.js viene caricato solo se esiste (sviluppo locale) -->
-    <script src="config.example.js"></script>
+    <!-- Carica config.production.js PRIMA (per produzione/Vercel) -->
+    <!-- Poi config.example.js come fallback -->
+    <!-- config.js viene caricato solo in sviluppo locale -->
     <script src="config.production.js"></script>
+    <script src="config.example.js"></script>
     <script>
         // Prova a caricare config.js solo se siamo in sviluppo locale
         // Su Vercel/produzione, config.js non esiste quindi non lo carichiamo
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            const configScript = document.createElement('script');
-            configScript.src = 'config.js';
-            configScript.onerror = function() {
-                // config.js non esiste, va bene, usiamo config.production.js
-                console.log('config.js non trovato, usando config.production.js');
-            };
-            document.head.appendChild(configScript);
-        }
+        // Usiamo un approccio sincrono per assicurarci che config.js sovrascriva tutto
+        (function() {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                try {
+                    // Prova a caricare config.js in modo sincrono
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', 'config.js', false); // false = sincrono
+                    xhr.send();
+                    if (xhr.status === 200) {
+                        // Esegui il contenuto di config.js
+                        eval(xhr.responseText);
+                    }
+                } catch(e) {
+                    // config.js non esiste, va bene, usiamo config.production.js
+                    console.log('config.js non trovato, usando config.production.js');
+                }
+            }
+        })();
     </script>
     <script src="tmb-api.js"></script>
     <script src="pixel-font.js"></script>
