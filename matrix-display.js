@@ -112,45 +112,56 @@ function renderMatrixDisplay(stopCode, arrivals) {
     if (!ctx) return;
     clearCanvas();
     
-    // Ordina arrivi per tempo - mostra solo il primo
+    // Ordina arrivi per tempo - mostra fino a 3
     const sortedArrivals = [...arrivals]
         .sort((a, b) => {
             const timeA = a['t-in-min'] !== undefined ? a['t-in-min'] : (a['t-in-s'] || 999);
             const timeB = b['t-in-min'] !== undefined ? b['t-in-min'] : (b['t-in-s'] || 999);
             return timeA - timeB;
         })
-        .slice(0, 1);
+        .slice(0, 3); // Mostra fino a 3 arrivi
 
     if (sortedArrivals.length === 0) {
         // Nessun arrivo
         drawText(ctx, 'NO BUS', 40, 13, '#888888', false);
     } else {
-        const arrival = sortedArrivals[0];
-        const minutes = arrival['t-in-min'] !== undefined ? arrival['t-in-min'] : Math.floor((arrival['t-in-s'] || 0) / 60);
-        const seconds = arrival['t-in-s'] || 0;
+        // Mostra fino a 3 arrivi, uno per riga
+        const startY = 2; // Inizia dall'alto
+        const lineHeight = 10; // Spazio tra le righe
         
-        let timeValue = 0;
-        let timeColor = '#00ff00';
-        
-        if (arrival['text-ca'] === 'imminent' || (minutes === 0 && seconds <= 60)) {
-            timeValue = seconds > 0 ? seconds : 0;
-            timeColor = '#ff0000';
-        } else if (minutes <= 3) {
-            timeValue = minutes;
-            timeColor = '#ffaa00';
-        } else {
-            timeValue = minutes;
-        }
-
-        // Linea bus sopra
-        const lineText = (arrival.line || 'N/A').toUpperCase();
-        const lineX = Math.floor((128 - (lineText.length * 6)) / 2);
-        drawText(ctx, lineText, lineX, 4, '#ff00ff', false);
-        
-        // Numero al centro (font normale)
-        const timeText = timeValue.toString();
-        const timeX = Math.floor((128 - (timeText.length * 6)) / 2);
-        drawText(ctx, timeText, timeX, 14, timeColor, false);
+        sortedArrivals.forEach((arrival, index) => {
+            if (index >= 3) return; // Massimo 3 arrivi
+            
+            const yPos = startY + (index * lineHeight);
+            const minutes = arrival['t-in-min'] !== undefined ? arrival['t-in-min'] : Math.floor((arrival['t-in-s'] || 0) / 60);
+            const seconds = arrival['t-in-s'] || 0;
+            
+            let timeText = '';
+            let timeColor = '#00ff00';
+            
+            if (arrival['text-ca'] === 'imminent' || (minutes === 0 && seconds <= 60)) {
+                timeText = seconds > 0 ? seconds + 'S' : 'NOW';
+                timeColor = '#ff0000';
+            } else if (minutes <= 3) {
+                timeText = minutes + 'MIN';
+                timeColor = '#ffaa00';
+            } else {
+                timeText = minutes + 'MIN';
+            }
+            
+            // Linea bus a sinistra (font piccolo)
+            const lineText = (arrival.line || 'N/A').toUpperCase();
+            drawText(ctx, lineText, 2, yPos, '#ff00ff', true);
+            
+            // Destinazione al centro (troncata se troppo lunga, max 15 caratteri)
+            const destination = (arrival.destination || 'N/A').toUpperCase().substring(0, 15);
+            const destX = 20; // Posizione dopo la linea
+            drawText(ctx, destination, destX, yPos, '#ffffff', true);
+            
+            // Tempo a destra (font piccolo)
+            const timeX = 128 - (timeText.length * 4) - 2;
+            drawText(ctx, timeText, timeX, yPos, timeColor, true);
+        });
     }
 
     // Auto-refresh ogni 60 secondi (evita chiamate troppo frequenti)
@@ -205,37 +216,47 @@ function stopDemo() {
 }
 
 /**
- * Renderizza dati demo sul display - VERSIONE ULTRA SEMPLICE
+ * Renderizza dati demo sul display - Mostra fino a 3 arrivi
  */
 function renderDemoDisplay(demo) {
     if (!ctx) return;
     clearCanvas();
     
-    const arrival = demo.arrivals[0];
-    if (!arrival) return;
+    if (!demo.arrivals || demo.arrivals.length === 0) return;
     
-    let timeValue = 0;
-    let timeColor = '#00ff00';
+    // Mostra fino a 3 arrivi
+    const arrivalsToShow = demo.arrivals.slice(0, 3);
+    const startY = 2;
+    const lineHeight = 10;
     
-    if (arrival.text === 'imminent' || (arrival.minutes === 0 && arrival.seconds <= 60)) {
-        timeValue = arrival.seconds > 0 ? arrival.seconds : 0;
-        timeColor = '#ff0000';
-    } else if (arrival.minutes <= 3) {
-        timeValue = arrival.minutes;
-        timeColor = '#ffaa00';
-    } else {
-        timeValue = arrival.minutes;
-    }
-    
-    // Linea bus sopra
-    const lineText = arrival.line.toUpperCase();
-    const lineX = Math.floor((128 - (lineText.length * 6)) / 2);
-    drawText(ctx, lineText, lineX, 4, '#ff00ff', false);
-    
-    // Numero al centro (font normale)
-    const timeText = timeValue.toString();
-    const timeX = Math.floor((128 - (timeText.length * 6)) / 2);
-    drawText(ctx, timeText, timeX, 14, timeColor, false);
+    arrivalsToShow.forEach((arrival, index) => {
+        const yPos = startY + (index * lineHeight);
+        
+        let timeText = '';
+        let timeColor = '#00ff00';
+        
+        if (arrival.text === 'imminent' || (arrival.minutes === 0 && arrival.seconds <= 60)) {
+            timeText = arrival.seconds > 0 ? arrival.seconds + 'S' : 'NOW';
+            timeColor = '#ff0000';
+        } else if (arrival.minutes <= 3) {
+            timeText = arrival.minutes + 'MIN';
+            timeColor = '#ffaa00';
+        } else {
+            timeText = arrival.minutes + 'MIN';
+        }
+        
+        // Linea bus a sinistra
+        const lineText = arrival.line.toUpperCase();
+        drawText(ctx, lineText, 2, yPos, '#ff00ff', true);
+        
+        // Destinazione al centro
+        const destination = arrival.destination.toUpperCase().substring(0, 15);
+        drawText(ctx, destination, 20, yPos, '#ffffff', true);
+        
+        // Tempo a destra
+        const timeX = 128 - (timeText.length * 4) - 2;
+        drawText(ctx, timeText, timeX, yPos, timeColor, true);
+    });
 }
 
 // Inizializza con demo se disponibile
