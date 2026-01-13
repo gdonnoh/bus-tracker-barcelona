@@ -21,6 +21,8 @@ Applicazione web per tracciare gli autobus TMB a Barcellona. Mostra la fermata p
 
 ### 2. Configura le credenziali
 
+#### Opzione A: Sviluppo Locale
+
 1. Copia il file di esempio: `cp config.example.js config.js`
 2. Apri `config.js` e inserisci le tue credenziali:
 
@@ -32,7 +34,29 @@ const TMB_CONFIG = {
 };
 ```
 
-**Nota:** Il file `config.js` è nel `.gitignore` per sicurezza - non committare mai le tue credenziali!
+**Nota:** Il file `config.js` è nel `.gitignore` per sicurezza - non committare mai le tue credenziali in sviluppo locale!
+
+#### Opzione B: Deploy su Vercel
+
+Per deployare su Vercel, hai due opzioni:
+
+**Opzione 1: Creare config.js direttamente nel repository (più semplice)**
+1. Crea `config.js` con le tue credenziali
+2. **Rimuovi** `config.js` da `.gitignore` temporaneamente
+3. Committa e pusha `config.js`
+4. Deploy su Vercel
+5. **Nota:** Le credenziali saranno pubbliche nel repository
+
+**Opzione 2: Usare Environment Variables su Vercel (consigliato)**
+1. Vai su [Vercel Dashboard](https://vercel.com/dashboard)
+2. Seleziona il tuo progetto
+3. Vai su **Settings** → **Environment Variables**
+4. Aggiungi:
+   - `TMB_APP_ID` = il tuo APP_ID
+   - `TMB_APP_KEY` = il tuo APP_KEY
+5. Crea un file `api/config.js` che legge le variabili d'ambiente (vedi esempio sotto)
+
+**⚠️ IMPORTANTE:** Per un'app client-side statica, le credenziali API saranno visibili nel codice sorgente del browser. Se questo è un problema, considera di creare un backend API proxy.
 
 ### 3. Avvia l'applicazione
 
