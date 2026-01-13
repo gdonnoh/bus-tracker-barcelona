@@ -31,6 +31,7 @@ function initEventListeners() {
     testBtn = document.getElementById('testBtn');
     demoBtn = document.getElementById('demoBtn');
     stopDemoBtn = document.getElementById('stopDemoBtn');
+    const findNearestBtn = document.getElementById('findNearestBtn');
     
     testBtn.addEventListener('click', () => {
         const code = testStopCode.value.trim();
@@ -41,6 +42,25 @@ function initEventListeners() {
 
     demoBtn.addEventListener('click', startDemo);
     stopDemoBtn.addEventListener('click', stopDemo);
+    
+    if (findNearestBtn) {
+        findNearestBtn.addEventListener('click', async () => {
+            if (!navigator.geolocation) {
+                alert('La geolocalizzazione non è supportata');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    await loadMatrixDisplayFromLocation(latitude, longitude);
+                },
+                (error) => {
+                    alert('Errore geolocalizzazione: ' + error.message);
+                }
+            );
+        });
+    }
 }
 
 // Dati demo per test senza API
@@ -67,7 +87,34 @@ const demoData = [
 let demoIndex = 0;
 
 /**
- * Carica e mostra i dati sul display matrice
+ * Carica e mostra i dati sul display matrice da una posizione geografica
+ */
+async function loadMatrixDisplayFromLocation(lat, lon) {
+    if (!ctx) return;
+    clearCanvas();
+    drawText(ctx, 'LOADING...', 40, 16, '#00ffff', false);
+
+    try {
+        // Ottieni tutti gli arrivi combinati (bus + metro)
+        const allArrivals = await getAllNearbyArrivals(lat, lon, 2000);
+        console.log('Arrivi combinati per display:', allArrivals);
+
+        if (allArrivals.length > 0) {
+            // Mostra i primi 3 arrivi più vicini
+            const topArrivals = allArrivals.slice(0, 3);
+            renderMatrixDisplay(null, topArrivals);
+        } else {
+            renderNoArrivals(null);
+        }
+    } catch (error) {
+        console.error('Errore:', error);
+        clearCanvas();
+        drawText(ctx, 'ERROR', 50, 16, '#ff0000', false);
+    }
+}
+
+/**
+ * Carica e mostra i dati sul display matrice da un codice fermata
  */
 async function loadMatrixDisplay(stopCode) {
     if (!ctx) return;
@@ -149,9 +196,11 @@ function renderMatrixDisplay(stopCode, arrivals) {
                 timeText = minutes + 'MIN';
             }
             
-            // Linea bus a sinistra (font piccolo)
+            // Linea bus/metro a sinistra (font piccolo)
+            // Usa colore diverso per metro (ciano) vs bus (magenta)
+            const lineColor = arrival.type === 'metro' ? '#00ffff' : '#ff00ff';
             const lineText = (arrival.line || 'N/A').toUpperCase();
-            drawText(ctx, lineText, 2, yPos, '#ff00ff', true);
+            drawText(ctx, lineText, 2, yPos, lineColor, true);
             
             // Destinazione al centro (troncata se troppo lunga, max 15 caratteri)
             const destination = (arrival.destination || 'N/A').toUpperCase().substring(0, 15);

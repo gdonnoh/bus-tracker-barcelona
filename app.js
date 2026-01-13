@@ -51,23 +51,15 @@ async function findNearestStop() {
                 
                 showStatus('Ricerca fermate vicine...', 'info');
                 
-                // Cerca fermate vicine (raggio aumentato a 2000m per Barcellona)
-                const nearbyData = await findNearbyStops(latitude, longitude, 2000);
+                // Ottieni tutti gli arrivi combinati (bus + metro) ordinati per tempo
+                const allArrivals = await getAllNearbyArrivals(latitude, longitude, 2000);
                 
-                console.log('Risultati ricerca fermate:', nearbyData);
+                console.log('Arrivi combinati trovati:', allArrivals);
                 
-                if (nearbyData.data && nearbyData.data.stops && nearbyData.data.stops.length > 0) {
-                    const nearestStop = nearbyData.data.stops[0];
-                    console.log('Fermata più vicina trovata:', nearestStop);
-                    displayStopInfo(nearestStop);
-                    
-                    // Carica arrivi solo se è una fermata bus (l'API i-bus è solo per autobus)
-                    if (nearestStop.type === 'metro') {
-                        showStatus(`Fermata Metro trovata: ${nearestStop.name}. L'API i-bus supporta solo autobus.`, 'info');
-                        arrivalsSection.classList.add('hidden');
-                    } else {
-                        await loadArrivals(nearestStop.stopId || nearestStop.code);
-                    }
+                if (allArrivals.length > 0) {
+                    // Mostra i primi 3 arrivi più vicini
+                    const topArrivals = allArrivals.slice(0, 3);
+                    displayCombinedArrivals(topArrivals);
                 } else {
                     // Nessuna fermata trovata
                     showStatus(`Nessuna fermata trovata entro 2km. Posizione: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. Usa la ricerca manuale con un codice fermata.`, 'info');

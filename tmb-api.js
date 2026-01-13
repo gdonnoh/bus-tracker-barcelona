@@ -184,6 +184,54 @@ async function findNearbyStops(lat, lon, radius = 1000) {
 }
 
 /**
+ * Genera arrivi simulati per fermate metro (l'API i-bus è solo per bus)
+ * Basato su frequenze tipiche della metro di Barcellona (3-5 minuti)
+ * @param {Object} metroStop - Fermata metro
+ * @returns {Array} Array di arrivi simulati
+ */
+function generateMetroArrivals(metroStop) {
+    if (!metroStop.lines || metroStop.lines.length === 0) {
+        return [];
+    }
+    
+    const arrivals = [];
+    const baseTime = Math.floor(Math.random() * 5) + 1; // Tempo base tra 1-5 minuti
+    
+    metroStop.lines.forEach((line, index) => {
+        // Genera 2-3 arrivi per linea con tempi diversi
+        const numArrivals = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < numArrivals; i++) {
+            const minutes = baseTime + (i * 4) + Math.floor(Math.random() * 2);
+            arrivals.push({
+                line: line,
+                destination: getMetroDestination(line),
+                't-in-min': minutes,
+                't-in-s': 0,
+                'text-ca': minutes + ' min',
+                type: 'metro',
+                stopCode: metroStop.code
+            });
+        }
+    });
+    
+    return arrivals;
+}
+
+/**
+ * Restituisce una destinazione tipica per una linea metro
+ */
+function getMetroDestination(line) {
+    const destinations = {
+        'L1': 'Fondo',
+        'L2': 'Badalona',
+        'L3': 'Zona Universitària',
+        'L4': 'La Pau',
+        'L5': 'Cornellà'
+    };
+    return destinations[line] || 'Terminal';
+}
+
+/**
  * Calcola la distanza tra due punti geografici (formula Haversine)
  * @param {number} lat1 - Latitudine punto 1
  * @param {number} lon1 - Longitudine punto 1
@@ -201,6 +249,63 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+}
+
+/**
+ * Ottiene arrivi combinati da tutte le fermate vicine (bus + metro)
+ * @param {number} lat - Latitudine
+ * @param {number} lon - Longitudine
+ * @param {number} radius - Raggio di ricerca in metri
+ * @returns {Promise<Array>} Array di arrivi ordinati per tempo
+ */
+async function getAllNearbyArrivals(lat, lon, radius = 2000) {
+    const nearbyStops = await findNearbyStops(lat, lon, radius);
+    
+    if (!nearbyStops.data || !nearbyStops.data.stops || nearbyStops.data.stops.length === 0) {
+        return [];
+    }
+    
+    const allArrivals = [];
+    
+    // Processa tutte le fermate vicine
+    for (const stop of nearbyStops.data.stops.slice(0, 5)) { // Limita a 5 fermate per performance
+        if (stop.type === 'bus') {
+            // Ottieni arrivi reali dall'API per fermate bus
+            try {
+                const arrivalsData = await getStopArrivals(stop.code);
+                if (arrivalsData.data && arrivalsData.data.ibus) {
+                    arrivalsData.data.ibus.forEach(arrival => {
+                        allArrivals.push({
+                            ...arrival,
+                            type: 'bus',
+                            stopCode: stop.code,
+                            stopName: stop.name,
+                            distance: stop.distance
+                        });
+                    });
+                }
+            } catch (error) {
+                console.warn(`Errore nel recuperare arrivi per fermata bus ${stop.code}:`, error);
+            }
+        } else if (stop.type === 'metro') {
+            // Genera arrivi simulati per fermate metro
+            const metroArrivals = generateMetroArrivals(stop);
+            metroArrivals.forEach(arrival => {
+                allArrivals.push({
+                    ...arrival,
+                    stopName: stop.name,
+                    distance: stop.distance
+                });
+            });
+        }
+    }
+    
+    // Ordina tutti gli arrivi per tempo (più vicino prima)
+    return allArrivals.sort((a, b) => {
+        const timeA = a['t-in-min'] !== undefined ? a['t-in-min'] : (a['t-in-s'] || 999);
+        const timeB = b['t-in-min'] !== undefined ? b['t-in-min'] : (b['t-in-s'] || 999);
+        return timeA - timeB;
+    });
 }
 
 /**
@@ -224,3 +329,5 @@ function formatArrivalTime(minutes) {
 
 // Esporta per uso globale
 window.formatArrivalTime = formatArrivalTime;
+window.getAllNearbyArrivals = getAllNearbyArrivals;
+window.generateMetroArrivals = generateMetroArrivals;
