@@ -290,19 +290,7 @@ function displayStopInfo(stop) {
     stopInfo.classList.remove('hidden');
     const stopName = stop.name || `Fermata ${stop.code}`;
     document.getElementById('stopName').textContent = stopName;
-    
-    // Mostra tipo di fermata (Bus o Metro)
-    let stopTypeText = '';
-    if (stop.type === 'metro') {
-        stopTypeText = '🚇 Metro';
-        if (stop.lines && stop.lines.length > 0) {
-            stopTypeText += ` - Linee: ${stop.lines.join(', ')}`;
-        }
-    } else {
-        stopTypeText = '🚌 Bus';
-    }
-    
-    document.getElementById('stopCode').textContent = `${stopTypeText} - Codice: ${stop.code || stop.stopId}`;
+    document.getElementById('stopCode').textContent = `🚌 Bus - Codice: ${stop.code || stop.stopId}`;
     
     if (stop.distance !== null && stop.distance !== undefined) {
         const distanceText = stop.distance < 1000 
