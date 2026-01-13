@@ -60,7 +60,14 @@ async function findNearestStop() {
                     const nearestStop = nearbyData.data.stops[0];
                     console.log('Fermata più vicina trovata:', nearestStop);
                     displayStopInfo(nearestStop);
-                    await loadArrivals(nearestStop.stopId || nearestStop.code);
+                    
+                    // Carica arrivi solo se è una fermata bus (l'API i-bus è solo per autobus)
+                    if (nearestStop.type === 'metro') {
+                        showStatus(`Fermata Metro trovata: ${nearestStop.name}. L'API i-bus supporta solo autobus.`, 'info');
+                        arrivalsSection.classList.add('hidden');
+                    } else {
+                        await loadArrivals(nearestStop.stopId || nearestStop.code);
+                    }
                 } else {
                     // Nessuna fermata trovata
                     showStatus(`Nessuna fermata trovata entro 2km. Posizione: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. Usa la ricerca manuale con un codice fermata.`, 'info');
@@ -242,8 +249,21 @@ function displayArrivals(arrivals) {
  */
 function displayStopInfo(stop) {
     stopInfo.classList.remove('hidden');
-    document.getElementById('stopName').textContent = stop.name || `Fermata ${stop.code}`;
-    document.getElementById('stopCode').textContent = `Codice: ${stop.code || stop.stopId}`;
+    const stopName = stop.name || `Fermata ${stop.code}`;
+    document.getElementById('stopName').textContent = stopName;
+    
+    // Mostra tipo di fermata (Bus o Metro)
+    let stopTypeText = '';
+    if (stop.type === 'metro') {
+        stopTypeText = '🚇 Metro';
+        if (stop.lines && stop.lines.length > 0) {
+            stopTypeText += ` - Linee: ${stop.lines.join(', ')}`;
+        }
+    } else {
+        stopTypeText = '🚌 Bus';
+    }
+    
+    document.getElementById('stopCode').textContent = `${stopTypeText} - Codice: ${stop.code || stop.stopId}`;
     
     if (stop.distance !== null && stop.distance !== undefined) {
         const distanceText = stop.distance < 1000 
