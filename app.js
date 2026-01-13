@@ -1,6 +1,7 @@
 // Logica principale dell'applicazione
 
 let currentStopCode = null;
+let refreshTimeout = null; // Timeout per l'auto-refresh
 
 // Elementi DOM
 const findNearestBtn = document.getElementById('findNearestBtn');
@@ -164,6 +165,8 @@ async function loadArrivals(stopCode) {
     } catch (error) {
         loadingArrivals.classList.add('hidden');
         showError(`Errore nel caricamento arrivi: ${error.message}`);
+    } finally {
+        loadArrivals.loading = false;
     }
 }
 
@@ -222,12 +225,16 @@ function displayArrivals(arrivals) {
         arrivalsList.appendChild(item);
     });
 
-    // Auto-refresh ogni 30 secondi
-    setTimeout(() => {
-        if (currentStopCode) {
+    // Auto-refresh ogni 60 secondi (evita chiamate troppo frequenti)
+    // Cancella eventuali timeout precedenti per evitare accumulo
+    if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+    }
+    refreshTimeout = setTimeout(() => {
+        if (currentStopCode === stopCode) {
             loadArrivals(currentStopCode);
         }
-    }, 30000);
+    }, 60000); // 60 secondi invece di 30
 }
 
 /**

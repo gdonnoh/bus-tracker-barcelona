@@ -153,12 +153,16 @@ function renderMatrixDisplay(stopCode, arrivals) {
         drawText(ctx, timeText, timeX, 14, timeColor, false);
     }
 
-    // Auto-refresh ogni 30 secondi
-    setTimeout(() => {
+    // Auto-refresh ogni 60 secondi (evita chiamate troppo frequenti)
+    // Cancella eventuali timeout precedenti per evitare accumulo
+    if (window.matrixRefreshTimeout) {
+        clearTimeout(window.matrixRefreshTimeout);
+    }
+    window.matrixRefreshTimeout = setTimeout(() => {
         if (currentStopCode === stopCode) {
             loadMatrixDisplay(stopCode);
         }
-    }, 30000);
+    }, 60000); // 60 secondi invece di 30
 }
 
 /**
