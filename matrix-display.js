@@ -95,7 +95,7 @@ async function loadMatrixDisplayFromLocation(lat, lon) {
     drawText(ctx, 'LOADING...', 40, 16, '#00ffff', false);
 
     try {
-        // Ottieni tutti gli arrivi combinati (bus + metro)
+        // Ottieni tutti gli arrivi delle fermate bus vicine
         const allArrivals = await getAllNearbyArrivals(lat, lon, 2000);
         console.log('Arrivi combinati per display:', allArrivals);
 
@@ -196,9 +196,8 @@ function renderMatrixDisplay(stopCode, arrivals) {
                 timeText = minutes + 'MIN';
             }
             
-            // Linea bus/metro a sinistra (font piccolo)
-            // Usa colore diverso per metro (ciano) vs bus (magenta)
-            const lineColor = arrival.type === 'metro' ? '#00ffff' : '#ff00ff';
+            // Linea bus a sinistra (font piccolo)
+            const lineColor = '#ff00ff'; // Magenta per bus
             const lineText = (arrival.line || 'N/A').toUpperCase();
             drawText(ctx, lineText, 2, yPos, lineColor, true);
             

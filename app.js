@@ -51,7 +51,7 @@ async function findNearestStop() {
                 
                 showStatus('Ricerca fermate vicine...', 'info');
                 
-                // Ottieni tutti gli arrivi combinati (bus + metro) ordinati per tempo
+                // Ottieni tutti gli arrivi delle fermate bus vicine ordinati per tempo
                 const allArrivals = await getAllNearbyArrivals(latitude, longitude, 2000);
                 
                 console.log('Arrivi combinati trovati:', allArrivals);
@@ -170,7 +170,7 @@ async function loadArrivals(stopCode) {
 }
 
 /**
- * Mostra arrivi combinati (bus + metro) nella UI
+ * Mostra arrivi bus nella UI
  */
 function displayCombinedArrivals(arrivals) {
     arrivalsSection.classList.remove('hidden');
@@ -203,8 +203,7 @@ function displayCombinedArrivals(arrivals) {
             timeText = `${minutes}min`;
         }
         
-        const typeIcon = arrival.type === 'metro' ? '🚇' : '🚌';
-        const lineText = `${typeIcon} ${arrival.line || 'N/A'}`;
+        const lineText = `🚌 ${arrival.line || 'N/A'}`;
         
         item.innerHTML = `
             <div class="bus-line">${lineText}</div>

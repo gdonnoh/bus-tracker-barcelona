@@ -63,29 +63,7 @@ const BARCELONA_STOPS = [
     { code: '3269', name: 'Poble Sec (Bus)', lat: 41.3750, lon: 2.1633, type: 'bus' },
     { code: '3270', name: 'Eixample (Bus)', lat: 41.3936, lon: 2.1638, type: 'bus' },
     { code: '3271', name: 'Raval (Bus)', lat: 41.3800, lon: 2.1700, type: 'bus' },
-    { code: '3272', name: 'Gothic Quarter (Bus)', lat: 41.3833, lon: 2.1767, type: 'bus' },
-    
-    // Fermate Metro principali (linee L1-L5)
-    { code: 'M-CAT', name: 'Plaça Catalunya (Metro)', lat: 41.3870, lon: 2.1701, type: 'metro', lines: ['L1', 'L3'] },
-    { code: 'M-PGR', name: 'Passeig de Gràcia (Metro)', lat: 41.3917, lon: 2.1649, type: 'metro', lines: ['L2', 'L3', 'L4'] },
-    { code: 'M-DIA', name: 'Diagonal (Metro)', lat: 41.3947, lon: 2.1582, type: 'metro', lines: ['L3', 'L5'] },
-    { code: 'M-SAG', name: 'Sagrada Família (Metro)', lat: 41.4036, lon: 2.1744, type: 'metro', lines: ['L2', 'L5'] },
-    { code: 'M-ARC', name: 'Arc de Triomf (Metro)', lat: 41.3911, lon: 2.1806, type: 'metro', lines: ['L1'] },
-    { code: 'M-DRU', name: 'Drassanes (Metro)', lat: 41.3759, lon: 2.1825, type: 'metro', lines: ['L3'] },
-    { code: 'M-BAR', name: 'Barceloneta (Metro)', lat: 41.3800, lon: 2.1898, type: 'metro', lines: ['L4'] },
-    { code: 'M-POB', name: 'Poblenou (Metro)', lat: 41.4026, lon: 2.2034, type: 'metro', lines: ['L4'] },
-    { code: 'M-FON', name: 'Fontana (Metro)', lat: 41.4014, lon: 2.1554, type: 'metro', lines: ['L3'] },
-    { code: 'M-SAN', name: 'Sants Estació (Metro)', lat: 41.3794, lon: 2.1403, type: 'metro', lines: ['L3', 'L5'] },
-    { code: 'M-PAR', name: 'Paral·lel (Metro)', lat: 41.3750, lon: 2.1633, type: 'metro', lines: ['L2', 'L3'] },
-    { code: 'M-URG', name: 'Urgell (Metro)', lat: 41.3936, lon: 2.1638, type: 'metro', lines: ['L1'] },
-    { code: 'M-LIC', name: 'Liceu (Metro)', lat: 41.3800, lon: 2.1700, type: 'metro', lines: ['L3'] },
-    { code: 'M-JAU', name: 'Jaume I (Metro)', lat: 41.3833, lon: 2.1767, type: 'metro', lines: ['L4'] },
-    { code: 'M-ESP', name: 'Espanya (Metro)', lat: 41.3750, lon: 2.1492, type: 'metro', lines: ['L1', 'L3'] },
-    { code: 'M-UNI', name: 'Universitat (Metro)', lat: 41.3858, lon: 2.1633, type: 'metro', lines: ['L1', 'L2'] },
-    { code: 'M-TET', name: 'Tetuan (Metro)', lat: 41.3950, lon: 2.1750, type: 'metro', lines: ['L2'] },
-    { code: 'M-GIR', name: 'Girona (Metro)', lat: 41.3958, lon: 2.1683, type: 'metro', lines: ['L4'] },
-    { code: 'M-VER', name: 'Verdaguer (Metro)', lat: 41.3958, lon: 2.1683, type: 'metro', lines: ['L4', 'L5'] },
-    { code: 'M-MAR', name: 'Marina (Metro)', lat: 41.3975, lon: 2.2017, type: 'metro', lines: ['L4'] },
+    { code: '3272', name: 'Gothic Quarter (Bus)', lat: 41.3833, lon: 2.1767, type: 'bus' }
 ];
 
 /**
