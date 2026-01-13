@@ -55,11 +55,23 @@
         </footer>
     </div>
 
-    <!-- Carica config.example.js come base, poi config.js se esiste (sovrascrive) -->
-    <!-- Per produzione su Vercel, usa config.production.js invece di config.js -->
+    <!-- Carica config.example.js come base, poi config.production.js per produzione -->
+    <!-- config.js viene caricato solo se esiste (sviluppo locale) -->
     <script src="config.example.js"></script>
     <script src="config.production.js"></script>
-    <script src="config.js"></script>
+    <script>
+        // Prova a caricare config.js solo se siamo in sviluppo locale
+        // Su Vercel/produzione, config.js non esiste quindi non lo carichiamo
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const configScript = document.createElement('script');
+            configScript.src = 'config.js';
+            configScript.onerror = function() {
+                // config.js non esiste, va bene, usiamo config.production.js
+                console.log('config.js non trovato, usando config.production.js');
+            };
+            document.head.appendChild(configScript);
+        }
+    </script>
     <script src="tmb-api.js"></script>
     <script src="app.js"></script>
 </body>
