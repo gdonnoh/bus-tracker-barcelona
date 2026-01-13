@@ -170,6 +170,53 @@ async function loadArrivals(stopCode) {
 }
 
 /**
+ * Mostra arrivi combinati (bus + metro) nella UI
+ */
+function displayCombinedArrivals(arrivals) {
+    arrivalsSection.classList.remove('hidden');
+    arrivalsList.innerHTML = '';
+    loadingArrivals.classList.add('hidden');
+    hideError();
+    
+    if (!arrivals || arrivals.length === 0) {
+        arrivalsList.innerHTML = '<div class="no-arrivals">Nessun arrivo previsto al momento</div>';
+        return;
+    }
+    
+    arrivals.forEach(arrival => {
+        const item = document.createElement('div');
+        item.className = 'arrival-item';
+        
+        const minutes = arrival['t-in-min'] !== undefined ? arrival['t-in-min'] : Math.floor((arrival['t-in-s'] || 0) / 60);
+        const seconds = arrival['t-in-s'] || 0;
+        
+        let timeText = '';
+        let timeClass = '';
+        
+        if (arrival['text-ca'] === 'imminent' || (minutes === 0 && seconds <= 60)) {
+            timeText = seconds > 0 ? `${seconds}s` : 'Arrivo';
+            timeClass = 'now';
+        } else if (minutes <= 3) {
+            timeText = `${minutes}min`;
+            timeClass = 'soon';
+        } else {
+            timeText = `${minutes}min`;
+        }
+        
+        const typeIcon = arrival.type === 'metro' ? '🚇' : '🚌';
+        const lineText = `${typeIcon} ${arrival.line || 'N/A'}`;
+        
+        item.innerHTML = `
+            <div class="bus-line">${lineText}</div>
+            <div class="bus-destination">${arrival.destination || 'Destinazione sconosciuta'}</div>
+            <div class="bus-time ${timeClass}">${timeText}</div>
+        `;
+        
+        arrivalsList.appendChild(item);
+    });
+}
+
+/**
  * Mostra gli arrivi nella UI
  */
 function displayArrivals(arrivals) {
