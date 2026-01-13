@@ -44,7 +44,6 @@ async function getStopArrivals(stopCode) {
 
 /**
  * Database locale di fermate note di Barcellona con coordinate
- * Include sia fermate autobus che fermate metro
  * Questo è un fallback quando l'API TMB non restituisce coordinate
  */
 const BARCELONA_STOPS = [
@@ -162,54 +161,6 @@ async function findNearbyStops(lat, lon, radius = 1000) {
 }
 
 /**
- * Genera arrivi simulati per fermate metro (l'API i-bus è solo per bus)
- * Basato su frequenze tipiche della metro di Barcellona (3-5 minuti)
- * @param {Object} metroStop - Fermata metro
- * @returns {Array} Array di arrivi simulati
- */
-function generateMetroArrivals(metroStop) {
-    if (!metroStop.lines || metroStop.lines.length === 0) {
-        return [];
-    }
-    
-    const arrivals = [];
-    const baseTime = Math.floor(Math.random() * 5) + 1; // Tempo base tra 1-5 minuti
-    
-    metroStop.lines.forEach((line, index) => {
-        // Genera 2-3 arrivi per linea con tempi diversi
-        const numArrivals = 2 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < numArrivals; i++) {
-            const minutes = baseTime + (i * 4) + Math.floor(Math.random() * 2);
-            arrivals.push({
-                line: line,
-                destination: getMetroDestination(line),
-                't-in-min': minutes,
-                't-in-s': 0,
-                'text-ca': minutes + ' min',
-                type: 'metro',
-                stopCode: metroStop.code
-            });
-        }
-    });
-    
-    return arrivals;
-}
-
-/**
- * Restituisce una destinazione tipica per una linea metro
- */
-function getMetroDestination(line) {
-    const destinations = {
-        'L1': 'Fondo',
-        'L2': 'Badalona',
-        'L3': 'Zona Universitària',
-        'L4': 'La Pau',
-        'L5': 'Cornellà'
-    };
-    return destinations[line] || 'Terminal';
-}
-
-/**
  * Calcola la distanza tra due punti geografici (formula Haversine)
  * @param {number} lat1 - Latitudine punto 1
  * @param {number} lon1 - Longitudine punto 1
@@ -230,7 +181,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Ottiene arrivi combinati da tutte le fermate vicine (bus + metro)
+ * Ottiene arrivi combinati da tutte le fermate vicine (bus)
  * @param {number} lat - Latitudine
  * @param {number} lon - Longitudine
  * @param {number} radius - Raggio di ricerca in metri
@@ -265,16 +216,6 @@ async function getAllNearbyArrivals(lat, lon, radius = 2000) {
             } catch (error) {
                 console.warn(`Errore nel recuperare arrivi per fermata bus ${stop.code}:`, error);
             }
-        } else if (stop.type === 'metro') {
-            // Genera arrivi simulati per fermate metro
-            const metroArrivals = generateMetroArrivals(stop);
-            metroArrivals.forEach(arrival => {
-                allArrivals.push({
-                    ...arrival,
-                    stopName: stop.name,
-                    distance: stop.distance
-                });
-            });
         }
     }
     
@@ -308,4 +249,3 @@ function formatArrivalTime(minutes) {
 // Esporta per uso globale
 window.formatArrivalTime = formatArrivalTime;
 window.getAllNearbyArrivals = getAllNearbyArrivals;
-window.generateMetroArrivals = generateMetroArrivals;
